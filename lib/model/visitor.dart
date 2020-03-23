@@ -11,5 +11,9 @@ class Visitor {
       this.card_number = null,
       this.card_exp_date = null,
       this.phone = null});
+
+  bool checkFields(){
+    return [name, documents, card_number, card_exp_date, phone].contains(null);
+  }
 //  Visitor.empty();
 }

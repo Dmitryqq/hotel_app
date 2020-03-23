@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hotel_app/event.dart';
+import 'package:hotel_app/model/event.dart';
 import 'package:hotel_app/DatePickersWidgets/range_picker_page.dart';
 
 class DatePickerScreen extends StatefulWidget {

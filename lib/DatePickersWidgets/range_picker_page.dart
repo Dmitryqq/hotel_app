@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hotel_app/bloc/room_order_bloc.dart';
-import 'package:hotel_app/event.dart';
+import 'package:hotel_app/model/event.dart';
 import 'package:flutter_date_pickers/flutter_date_pickers.dart';
 import 'package:hotel_app/model/room.dart';
 import 'package:hotel_app/model/room_order.dart';
@@ -27,7 +26,7 @@ class _RangePickerPageState extends State<RangePickerPage> {
   Color selectedPeriodLastColor;
   Color selectedPeriodMiddleColor;
 
-  RoomsOrderBloc _roomsOrderBloc;
+  var schedule;
 
   double price = 0;
 
@@ -65,73 +64,64 @@ class _RangePickerPageState extends State<RangePickerPage> {
       selectedPeriodMiddleDecoration: BoxDecoration(
           color: selectedPeriodMiddleColor, shape: BoxShape.rectangle),
     );
-
-    return Consumer<RoomsOrderBloc>(builder: (context, _roomsOrderBloc, child) {
-      this._roomsOrderBloc = _roomsOrderBloc;
-      return StreamBuilder<RoomOrder>(
-          stream: _roomsOrderBloc.getRoomOrder,
-          builder: (context, snapshot) {
-            if (snapshot.data != null) {
-              if (snapshot.data.datePeriod != null) {
-                _selectedPeriod = snapshot.data.datePeriod;
-                price = snapshot.data.room.price;
-              }
-            }
-//            print("${_selectedPeriod.end}  ${_selectedPeriod.start}");
-            difference =
-                _selectedPeriod.end.difference(_selectedPeriod.start).inDays;
-            return Flex(
-                direction:
-                    MediaQuery.of(context).orientation == Orientation.portrait
-                        ? Axis.vertical
-                        : Axis.horizontal,
-                children: <Widget>[
-                  Expanded(
-                      flex: 3,
-                      child: Center(
-                          child: RangePicker(
-                        selectedPeriod: _selectedPeriod,
-                        onChanged: _onSelectedDateChanged,
-                        firstDate: _firstDate,
-                        lastDate: _lastDate,
-                        datePickerStyles: styles,
-                        eventDecorationBuilder: _eventDecorationBuilder,
-                      ))),
-                  Expanded(
-                      flex: 1,
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12.0, vertical: 12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Text(
-                                difference == 1
-                                    ? "$difference day"
-                                    : "$difference days",
-                                style: TextStyle(
-                                  fontSize: 30,
-                                ),
-                              ),
-                              if (price != 0)
-                                Text(
-                                  "${price} \$ per day",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                  ),
-                                ),
-                              if (price != 0)
-                                Text(
-                                  "${difference * price} \$ total",
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                  ),
-                                )
-                            ],
-                          )))
-                ]);
-          });
-    });
+    schedule = Provider.of<RoomOrder>(context);
+    if (schedule.getDatePeriodState != null) {
+      _selectedPeriod = schedule.getDatePeriodState;
+    }
+    else{
+      schedule.setDatePeriodState = _selectedPeriod;
+    }
+    price = schedule.getRoomState.price;
+    difference = _selectedPeriod.end.difference(_selectedPeriod.start).inDays;
+    return Flex(
+        direction: MediaQuery.of(context).orientation == Orientation.portrait
+            ? Axis.vertical
+            : Axis.horizontal,
+        children: <Widget>[
+          Expanded(
+              flex: 3,
+              child: Center(
+                  child: RangePicker(
+                selectedPeriod: _selectedPeriod,
+                onChanged: _onSelectedDateChanged,
+                firstDate: _firstDate,
+                lastDate: _lastDate,
+                datePickerStyles: styles,
+                eventDecorationBuilder: _eventDecorationBuilder,
+              ))),
+          Expanded(
+              flex: 1,
+              child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12.0, vertical: 12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        difference == 1
+                            ? "$difference day"
+                            : "$difference days",
+                        style: TextStyle(
+                          fontSize: 30,
+                        ),
+                      ),
+                      if (price != 0)
+                        Text(
+                          "${price} \$ per day",
+                          style: TextStyle(
+                            fontSize: 24,
+                          ),
+                        ),
+                      if (price != 0)
+                        Text(
+                          "${difference * price} \$ total",
+                          style: TextStyle(
+                            fontSize: 24,
+                          ),
+                        )
+                    ],
+                  )))
+        ]);
   }
 
   void _onSelectedDateChanged(DatePeriod newPeriod) {
@@ -143,15 +133,13 @@ class _RangePickerPageState extends State<RangePickerPage> {
       }
     }
     setState(() {
-//      print("${newPeriod.end.day}  ${_selectedPeriod.start.day}");
       if (check) {
         _selectedPeriod = newPeriod.end.day == _selectedPeriod.start.day
             ? DatePeriod(DateTime.now().add(Duration(minutes: 10)),
                 DateTime.now().add(Duration(days: 1, minutes: 10)))
             : DatePeriod(
                 DateTime.now().add(Duration(minutes: 10)), newPeriod.end);
-//        print("123");
-        _roomsOrderBloc.setOrder.add(_selectedPeriod);
+        schedule.setDatePeriodState = _selectedPeriod;
       }
     });
   }
